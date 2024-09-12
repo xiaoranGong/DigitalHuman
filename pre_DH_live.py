@@ -212,7 +212,7 @@ def DH_live_inference(audio_path, video_path='', video_name=''):
     elif video_name != '':
         pkl_in_path = DigitalHuman_path + "/output/{}.pkl".format(video_name)
         video_in_path = DigitalHuman_path + "/output/{}.mp4".format(video_name)
-        video_out_path = DigitalHuman_path + "/output/{}.mp4".format(video_name)
+        video_out_path = DigitalHuman_path + "/output/{}tmp.mp4".format(video_name)
         # print("使用 存的", video_out_path)
 
 
@@ -246,8 +246,8 @@ def DH_live_inference(audio_path, video_path='', video_name=''):
         print("Video writer released successfully.")
     except Exception as e:
         print(f"Error releasing video writer: {e}")
-    # if os.path.exists(video_out_path):
-    #     os.remove(video_out_path)
+    if os.path.exists(video_out_path):
+        os.remove(video_out_path)
     os.system(
         "ffmpeg -i {} -i {} -c:v libx264 -pix_fmt yuv420p -loglevel quiet {}".format(save_path, audio_path, video_out_path)
     )

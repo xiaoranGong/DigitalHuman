@@ -5,7 +5,7 @@ from pre_DH_live import DH_live_inference
 
 DigitalHuman_path = os.path.dirname(os.path.abspath(__file__))
 
-def qianwen(prompt, history, sys_prompt):
+def qianwen(prompt, history):
     model_name = DigitalHuman_path + "/models/Qwen2-0.5B-Instruct"
     device = "cuda" # the device to load the model onto
 
@@ -17,7 +17,7 @@ def qianwen(prompt, history, sys_prompt):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     messages = [
-        {"role": "system", "content": sys_prompt},
+        {"role": "system", "content": "中文回答"},
         {"role": "user", "content": prompt}
     ]
     text = tokenizer.apply_chat_template(
@@ -34,99 +34,63 @@ def qianwen(prompt, history, sys_prompt):
     generated_ids = [
         output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
     ]
-
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-
     return response
 
 
-
-import torch
-import time
-import datetime
-import re
+import asyncio
 import random
-import tqdm
-import ChatTTS
-import torchaudio
+
+import edge_tts
+from edge_tts import VoicesManager
+import soundfile as sf
 import numpy as np
-import wave
-def clear_cuda_cache():
-    """
-    Clear CUDA cache
-    :return:
-    """
-    torch.cuda.empty_cache()
-def normalize_audio(audio):
-    """
-    Normalize audio array to be between -1 and 1
-    :param audio: Input audio array
-    :return: Normalized audio array
-    """
-    audio = np.clip(audio, -1, 1)
-    max_val = np.max(np.abs(audio))
-    if max_val > 0:
-        audio = audio / max_val
-    return audio
-def save_audio(file_name, audio, rate=24000):
-    """
-    保存音频文件
-    :param file_name:
-    :param audio:
-    :param rate:
-    :return:
-    """
-    import os
-    audio = (audio * 32767).astype(np.int16)
+import librosa
+def resample_audio(driven_audio_path):
+    # 读取上传的音频文件
+    audio, sr = sf.read(driven_audio_path)
+    # 如果是立体声，转换为单声道
+    if len(audio.shape) > 1:
+        audio = np.mean(audio, axis=1)
 
-    # 检查默认目录
-    if not os.path.exists("extensions/DigitalHuman/output"):
-        os.makedirs("extensions/DigitalHuman/output")
-    full_path = os.path.join("extensions/DigitalHuman/output", file_name)
-    with wave.open(full_path, "w") as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)
-        wf.setframerate(rate)
-        wf.writeframes(audio.tobytes())
-    return full_path
-def generate_audio(text_file, pt_file, seed=0, batch_size=4, speed=4,
-                            temperature=0.1, top_P=0.7, top_K=20, cur_tqdm=None, skip_save=False,
-                            skip_refine_text=False):
-    print("33333333333333333333333333333333", DigitalHuman_path + "/models")
-    chat = ChatTTS.Chat()
-    chat.load(compile=False)
-    wav_filename = DigitalHuman_path + "/my_res.wav"
-    rnd_spk_emb = torch.load(pt_file)
-    params_infer_code = {
-        'spk_emb': rnd_spk_emb,
-        'prompt': f'[speed_{speed}]',
-        'top_P': top_P,
-        'top_K': top_K,
-        'temperature': temperature
-    }
-    _params_infer_code = {**params_infer_code}
-    wavs = chat.infer(text_file, params_infer_code=_params_infer_code)
-    wavs = [normalize_audio(w) for w in wavs]  # 先对每段音频归一化
-    combined_audio = np.concatenate(wavs, axis=1)
+    # 重采样到16kHz
+    resampled_audio = librosa.resample(audio,
+                                       orig_sr=sr,
+                                       target_sr=16000)
+    # 将音频格式转换为16位深度
+    resampled_audio = (resampled_audio * 32767).astype(np.int16)
+    # 保存处理后的音频到wav文件
+    output_file = driven_audio_path
+    sf.write(output_file, resampled_audio, 16000, subtype='PCM_16')
 
-    save_audio(wav_filename, combined_audio)
-    return wav_filename
+    return output_file  # 返回保存的音频文件路径
 
+async def amain(response, audio_name, audio_path) -> None:
+    """Main function"""
+    voices = await VoicesManager.create()
+    voice = audio_name
+    # Also supports Locales
+    # voice = voices.find(Gender="Female", Locale="es-AR")
+
+    communicate = edge_tts.Communicate(response, voice)
+    await communicate.save(audio_path)
 
 
 import gradio as gr
-def human_final(prompt, history, audio_name, video_name, system_prompt):
+def human_final(prompt, history, audio_name, video_name):
     if audio_name=="空" or video_name=="空":
         gr.Info("音频模型 或 数字人模型 不能为空")
-    Qwen_response = qianwen(prompt, history, system_prompt)
-    print("000000000000000000000000000000000000", Qwen_response)
+    Qwen_response = qianwen(prompt, history)
+    print("Qwen 回答", Qwen_response)
     history.append((prompt, Qwen_response))
-    audio_pt_path = DigitalHuman_path + "/output/" + audio_name + ".pt"
-    print("11111111111111111111111111111111111", audio_pt_path)
-    voice_inference = generate_audio(Qwen_response, audio_pt_path)
-
-    # voice_inference = inference_audio(Qwen_response, audio_pt_path)
-    human_video = DH_live_inference(voice_inference, video_name=video_name)
-    # "{}/human_pre.pkl".format(os.path.dirname(video_out_path))
+    audio_path = DigitalHuman_path + "/output/" + audio_name + ".wav"
+    loop = asyncio.get_event_loop_policy().get_event_loop()
+    try:
+        loop.run_until_complete(amain(Qwen_response, audio_name, audio_path))
+    finally:
+        loop.close()
+    audio_path_16 = resample_audio(audio_path)
+    print("Edge 完成")
+    human_video = DH_live_inference(audio_path_16, video_name=video_name)
 
     return '', history, human_video

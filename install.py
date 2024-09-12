@@ -56,10 +56,8 @@ DigitalHuman_kv = {
     "visdom": "visdom==0.2.4",
     "wandb": "wandb==0.16.5",
     "tensorboard": "tensorboard==2.17.0",
-# Chattts
-    "Chattts": "Chattts",
-    "cn2an": "cn2an",
-    "jieba": "jieba",
+# edge-tts
+    "edge-tts": "edge-tts",
 }
 
 for k, v in DigitalHuman_kv.items():

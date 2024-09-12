@@ -1,4 +1,4 @@
-# SD webui forge 使用手册（施工ing）
+# SD webui forge 使用手册
 
 # 支撑下载
 
