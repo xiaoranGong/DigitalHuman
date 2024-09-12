@@ -1,8 +1,10 @@
-# SD webui forge 使用手册
+# DigitalHuman 
 
-# 支撑下载
+DigitalHuman 是 SD webui forge 的一个扩展，可以生成数字人，
 
-## FFmpeg 下载 (windows)
+## 相关支撑下载
+
+### 一、FFmpeg 下载 (windows)
 
 1、官网下载 windows 版本
 
@@ -10,35 +12,29 @@
 
 2、把 FFmpeg 加到 环境变量中
 
-![image.png](image.png)
+![image.png](imgs/image.png)
 
-## web ui forge 下载
+### 二、web ui forge 下载
 
 项目地址 https://github.com/lllyasviel/stable-diffusion-webui-forge 官网下载 windows 一键启动
 
-![image.png](image%201.png)
+![image.png](imgs/image%201.png)
 
 1. 解压缩并进入 `webui_forge_cu121_torch231` 目录中
 2. 下载 [flux1-dev-bnb-nf4-v2.safetensors](https://huggingface.co/lllyasviel/flux1-dev-bnb-nf4/blob/main/flux1-dev-bnb-nf4-v2.safetensors) 放到 `webui_forge_cu121_torch231\webui\models\Stable-diffusion\` 目录下
-3. 进入目录 `webui_forge_cu121_torch231\system` 删除 `python`文件夹。
-4. 使用 conda 重新生成 python 库，在 `webui_forge_cu121_torch231\system` 目录下 cmd ，输入`conda create --prefix E:\3dhuman\webui_forge_cu121_torch231\system\python python=3.10.6`
-    
-    `conda activate E:\3dhuman\webui_forge_cu121_torch231\system\python`
-    
-    `conda install -c conda-forge pynini`
-    
-5. 修改 webui_forge\webui\requirements_versions.txt
 
-einops==0.4.1   →     einops==0.6.1
+3. 修改 webui_forge\webui\requirements_versions.txt
 
-1. 执行 `update.bat`
-2. 执行 `run.bat`
+```einops==0.4.1 → einops==0.6.1```
 
-## LivePortrait 插件安装
+4. 执行 `update.bat`
+5. 执行 `run.bat`
+
+### 三、LivePortrait 插件安装
 
 项目原地址 https://github.com/KwaiVGI/LivePortrait
 
-### 下载LivePortrait sd插件
+#### 下载LivePortrait sd插件
 
 项目地址： https://github.com/dimitribarbot/sd-webui-live-portrait
 
@@ -49,29 +45,29 @@ einops==0.4.1   →     einops==0.6.1
 5. 安装可能需要几分钟，因为 XPose 可能会被编译。最后，您将看到消息“Installed into stable-diffusion-webui\extensions\sd-webui-live-portrait. Use Installed tab to restart。
 6.  转到“Installed”选项卡，单击“Check for updates”，然后单击“Apply and restart UI”。 （下次您还可以使用这些按钮来更新此扩展。）
 
-在 SD webui forge 不能直接用sd-webui-live-portrait，有一些error(SD webui forge是gradio4+有一些改动)
+#### 在 SD webui forge 不能直接用sd-webui-live-portrait，有一些error(SD webui forge是gradio4+有一些改动)
 
 - All model fields require a type annotation; if flag stitching retargeting input' is not meant to be a field, you maybe able to resolve this error by annotating it as a 'ClassVar' or updating model config ' ignored types '] ,
     
-    ![image.png](image%202.png)
+    ![image.png](imgs/image%202.png)
     
     `webui_forge_cu121_torch231\webui\extensions\sd-webui-live-portrait\scripts\api.py` 注销515、589
     
-    ![image.png](image%203.png)
+    ![image.png](imgs/image%203.png)
     
-    ![image.png](image%204.png)
+    ![image.png](imgs/image%204.png)
     
 - ValueError: Invalid value for parameter 'type': file. Please choose from one of: ['filepath' , ' binary']
     
-    ![image.png](image%205.png)
+    ![image.png](imgs/image%205.png)
     
     `webui_forge_cu121_torch231\webui\extensions\sd-webui-live-portrait\scripts\main.py` 修改 350 行
     
-    ![image.png](image%206.png)
+    ![image.png](imgs/image%206.png)
     
 - TypeError: save_pil_to_file() got an unexpected keyword argument 'name’
     
-    ![image.png](image%207.png)
+    ![image.png](imgs/image%207.png)
     
     gr.Image() 4.+  `gr.Image(type="filepath")` 有点问题 
     
@@ -79,27 +75,27 @@ einops==0.4.1   →     einops==0.6.1
     
     366 行
     
-    ![image.png](image%208.png)
+    ![image.png](imgs/image%208.png)
     
     331 行
     
-    ![image.png](image%209.png)
+    ![image.png](imgs/image%209.png)
     
     346 行
     
-    ![image.png](image%2010.png)
+    ![image.png](imgs/image%2010.png)
     
     661 行
     
-    ![image.png](image%2011.png)
+    ![image.png](imgs/image%2011.png)
     
     上边这几行的 `source_image_input = gr.Image(type="filepath")`  都改成 `source_image_input = gr.Image()`
     
-    ![image.png](image%2012.png)
+    ![image.png](imgs/image%2012.png)
     
     2222********************************************************************************
     
-    ![image.png](image%2013.png)
+    ![image.png](imgs/image%2013.png)
     
     改成
     
@@ -131,10 +127,10 @@ einops==0.4.1   →     einops==0.6.1
             return pipeline.execute_video(*tmp_args, **kwargs)
     ```
     
-    ![image.png](image%2014.png)
+    ![image.png](imgs/image%2014.png)
     
 
-### 下载模型
+#### 下载模型
 
 [https://huggingface.co/Kijai/LivePortrait_safetensors/tree/main](https://huggingface.co/Kijai/LivePortrait_safetensors/tree/main) 
 
@@ -144,47 +140,45 @@ model放置：(human)
 
 ```bash
 liveportrait
-|__base_models
-|____appearance_feature_extractor.safetensors
-|____gitattributes
-|____landmark_model.pth
-|____motion_extractor.safetensors
-|____spade_generator.safetensors
-|____warping_module.safetensors
+|_base_models
+|__appearance_feature_extractor.safetensors
+|__gitattributes
+|__landmark_model.pth
+|__motion_extractor.safetensors
+|__spade_generator.safetensors
+|__warping_module.safetensors
 |__retargeting_models
-|____stitching_retargeting_module.safetensors
-|__landmark.onnx
+|__stitching_retargeting_module.safetensors
+|_landmark.onnx
 ```
 
 `webui_forge_cu121_torch231\webui\models\insightface\models\buffalo_l\`
 
 ```bash
 buffalo_l
-|__2d106det.onnx
-|__det_10g.onnx
+|_2d106det.onnx
+|_det_10g.onnx
 ```
 
-# DigitalHuman 插件开发
+## DigitalHuman 插件
 
-位置：在 `webui_forge\webui\extensions`
+位置：放在 `webui_forge\webui\extensions`
 
-## DH_live
+下载本项目
+```git clone https://github.com/xiaoranGong/DigitalHuman.git```
 
- https://github.com/kleinlee/DH_live
+### 本项目使用的开源仓库
+#### DH_live
+数字人形象，音频驱动数字人项目。
 
-在目录 `webui_forge\webui\extensions\DigitalHuman\` 下，打开 cmd，执行
+ 项目地址：https://github.com/kleinlee/DH_live
 
-```bash
-git clone [https://github.com/kleinlee/DH_live.git](https://github.com/kleinlee/DH_live.git)
-```
+#### Edge TTS
+文本转语音项目。
 
-webui_forge_cu121_torch231\webui\extensions\DigitalHuman\DH_live\checkpoint
+原项目地址：https://github.com/rany2/edge-tts.git
 
-```bash
-copy /b render.pth.gz.001 + render.pth.gz.002 render.pth.gz
-gzip -d render.pth.gz
-```
+#### Qwen2
+Qwen2是阿里云Qwen团队开发的大型语言模型系列。
 
-## CosyVoice
-
-## Qwen
+原项目地址：https://github.com/QwenLM/Qwen2
